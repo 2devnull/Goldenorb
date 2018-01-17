@@ -1,6 +1,4 @@
 <%+header%>
-
-<script type="text/javascript" src="<%=resource%>/xhr.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 	modemtype=0;
@@ -36,6 +34,8 @@
 			document.getElementById('conntype').innerHTML=rv.conntype;
 			document.getElementById('chan').innerHTML=rv.channel;
 			document.getElementById('lband').innerHTML=rv.lband;
+			document.getElementById('temp').innerHTML=rv.temp;
+			document.getElementById('sinr').innerHTML=rv.sinr;
 			document.getElementById('conmon').innerHTML=rv.netmode;
 
 			document.getElementById('crate').innerHTML=rv.crate;
@@ -118,6 +118,8 @@
 		document.getElementById('imsi').innerHTML="-";
 		document.getElementById('iccid').innerHTML="-";
 		document.getElementById('lband').innerHTML="-";
+		document.getElementById('temp').innerHTML="-";
+		document.getElementById('sinr').innerHTML="-";
 	}
 
 	function increase(btn)
@@ -356,7 +358,15 @@
   	</tr>
   	<tr>
     		<td><div align="right">Signal Strength : </div></td>
-    		<td><ul id="per"></ul></td>
+    		<td><ul id="per"></ul>
+  		<script type="text/javascript">//<![CDATA[
+				document.body.innerHTML = "<img src="<%=resource%>/icons/signal-75-100.png">";
+ 		//]]></script></td>
+    		<td>&nbsp;</td>
+  	</tr>
+  	<tr>
+    		<td><div align="right">SINR : </div></td>
+    		<td><ul id="sinr"></ul></td>
     		<td>&nbsp;</td>
   	</tr>
   	<tr>
@@ -374,6 +384,12 @@
     		<td><ul><span id="rscp" class="r"></span><span id="rscp1" class="r"></span></ul></td>
     		<td>&nbsp;</td>
   	</tr>
+  	<tr>
+    		<td><div align="right">Modem temperature : </div></td>
+    		<td><ul id="temp"></ul></td>
+    		<td>&nbsp;</td>
+  	</tr>
+
 	<tr>
     		<td><div align="right">Connection Monitoring Status : </div></td>
     		<td><ul id="conmon"></ul></td>

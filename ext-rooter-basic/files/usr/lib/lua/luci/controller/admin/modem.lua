@@ -251,6 +251,8 @@ function action_get_csq()
 	rv["phone"] = file:read("*line")
 	file:read("*line")
 	rv["lband"] = file:read("*line")
+	rv["temp"] = file:read("*line")
+	rv["sinr"] = file:read("*line")
 
 	file:close()
 
@@ -264,6 +266,8 @@ function action_get_csq()
 	rscp = rv["rscp"]
 	ecio1 = rv["ecio1"]
 	rscp1 = rv["rscp1"]
+	temp = rv["temp"]
+	sinr = rv["sinr"]
 
 	if ecio == nil then
 		ecio = "-"

@@ -48,6 +48,8 @@ make_connect() {
 	echo "-" >> /tmp/statusx$CURRMODEM.file
 	echo "-" >> /tmp/statusx$CURRMODEM.file
 	echo "-" >> /tmp/statusx$CURRMODEM.file
+	echo "-" >> /tmp/statusx$CURRMODEM.file
+	echo "-" >> /tmp/statusx$CURRMODEM.file
 	mv -f /tmp/statusx$CURRMODEM.file /tmp/status$CURRMODEM.file
 }
 
@@ -81,6 +83,8 @@ make_signal() {
 	echo "$CNUM" >> /tmp/statusx$CURRMODEM.file
 	echo "$CNAM" >> /tmp/statusx$CURRMODEM.file
 	echo "$LBAND" >> /tmp/statusx$CURRMODEM.file
+	echo "$TEMP" >> /tmp/statusx$CURRMODEM.file
+	echo "$SINR" >> /tmp/statusx$CURRMODEM.file
 	mv -f /tmp/statusx$CURRMODEM.file /tmp/status$CURRMODEM.file
 }
 

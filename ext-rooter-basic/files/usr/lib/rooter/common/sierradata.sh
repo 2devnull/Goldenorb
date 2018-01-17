@@ -32,6 +32,20 @@ else
 	CSQ_RSSI="-"
 fi
 
+TEMP=$(echo $O | tr 'a-z' 'A-Z' | awk '{for(i=1;i<=NF;i++)if($i~/TEMPERATURE/)print $(i+1)}')
+if [ -z "$TEMP" ]; then
+	TEMP="-"
+else
+	TEMP=$TEMP" Celsius"
+fi
+
+SINR=$(echo $O | awk '{for(i=1;i<=NF;i++)if($i~/SINR/)print $(i+2)}')
+if [ -z "$SINR" ]; then
+        SINR="-"
+else
+        SINR=$SINR" dB"
+fi
+
 LBAND=$(echo $O | tr 'a-z' 'A-Z' | grep -o "LTE BAND:[ ]*B[0-9]\+ LTE BW:[ ]*[0-9]\+ MHZ")
 if [ -z "$LBAND" ]; then
 	LBAND="-"
@@ -165,6 +179,9 @@ echo 'MODTYPE="'"$MODTYPE"'"' >> /tmp/signal$CURRMODEM.file
 echo 'NETMODE="'"$NETMODE"'"' >> /tmp/signal$CURRMODEM.file
 echo 'CHANNEL="'"$CHANNEL"'"' >> /tmp/signal$CURRMODEM.file
 echo 'LBAND="'"$LBAND"'"' >> /tmp/signal$CURRMODEM.file
+echo 'TEMP="'"$TEMP"'"' >> /tmp/signal$CURRMODEM.file
+echo 'SINR="'"$SINR"'"' >> /tmp/signal$CURRMODEM.file
+
 
 CONNECT=$(uci get modem.modem$CURRMODEM.connected)
 if [ $CONNECT -eq 0 ]; then

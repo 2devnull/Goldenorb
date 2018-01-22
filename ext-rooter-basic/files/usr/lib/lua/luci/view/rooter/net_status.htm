@@ -1,5 +1,4 @@
 <%+header%>
-<script type="text/javascript" src="<%=resource%>/xhr.js"></script>
 <script type="text/javascript">//<![CDATA[
 
 	modemtype=0;
@@ -13,7 +12,12 @@
 		{
 			document.getElementById('port').innerHTML=rv.port;
 			document.getElementById('csq').innerHTML=rv.csq;
-			document.getElementById('per').innerHTML=rv.per;
+			rv.per=rv.per.replace(/%/g, '')
+				if (rv.per > 75) { document.getElementById('per').innerHTML=rv.per + '%	<img src="<%=resource%>/icons/signal-75-100.png">'; }
+				else if (rv.per <= 75 && rv.per > 50) { document.getElementById('per').innerHTML=rv.per + '%	<img src="<%=resource%>/icons/signal-50-75.png">'; }
+				else if (rv.per <= 50 && rv.per > 25) { document.getElementById('per').innerHTML=rv.per + '%	<img src="<%=resource%>/icons/signal-25-50.png">'; }
+				else if (rv.per > 0 && rv.per < 25) { document.getElementById('per').innerHTML=rv.per + '%	<img src="<%=resource%>/icons/signal-0-25.png">'; }
+				else { document.getElementById('per').innerHTML=rv.per + '%	<img src="<%=resource%>/icons/signal-0.png">'; }
 			document.getElementById('rssi').innerHTML=rv.rssi;
 			document.getElementById('modem').innerHTML=rv.modem;
 			document.getElementById('cops').innerHTML=rv.cops;
@@ -28,15 +32,28 @@
 			document.getElementById('rncn').innerHTML=rv.rncn;
 			document.getElementById('down').innerHTML=rv.down;
 			document.getElementById('up').innerHTML=rv.up;
-			document.getElementById('ecio').innerHTML=rv.ecio;
-			document.getElementById('rscp').innerHTML=rv.rscp;
+				if ( rv.ecio.replace(/ \(RSRQ\) dB/g, '') > -5) { document.getElementById('ecio').innerHTML=rv.ecio + '	<img src="<%=resource%>/icons/signal-75-100.png">'; }
+				else if ( rv.ecio.replace(/ \(RSRQ\) dB/g, '') <= -5 && rv.ecio.replace(/ \(RSRQ\) dB/g, '') > -8)  { document.getElementById('ecio').innerHTML=rv.ecio + '	<img src="<%=resource%>/icons/signal-50-75.png">'; }
+				else if ( rv.ecio.replace(/ \(RSRQ\) dB/g, '') <= -8 && rv.ecio.replace(/ \(RSRQ\) dB/g, '') > -11)  { document.getElementById('ecio').innerHTML=rv.ecio + '	<img src="<%=resource%>/icons/signal-25-50.png">'; }
+				else if ( rv.ecio.replace(/ \(RSRQ\) dB/g, '') <= -11 && rv.ecio.replace(/ \(RSRQ\) dB/g, '') > -15)  { document.getElementById('ecio').innerHTML=rv.ecio + '	<img src="<%=resource%>/icons/signal-0-25.png">'; }
+				else { document.getElementById('ecio').innerHTML=rv.ecio + '	<img src="<%=resource%>/icons/signal-0.png">'; }
+
+				if ( rv.rscp.replace(/ \(RSRP\) dBm/g, '') > -70) { document.getElementById('rscp').innerHTML=rv.rscp + '	<img src="<%=resource%>/icons/signal-75-100.png">'; }
+				else if ( rv.rscp.replace(/ \(RSRP\) dBm/g, '') <= -70 && rv.rscp.replace(/ \(RSRP\) dBm/g, '') > -80)  { document.getElementById('rscp').innerHTML=rv.rscp + '	<img src="<%=resource%>/icons/signal-50-75.png">'; }
+				else if ( rv.rscp.replace(/ \(RSRP\) dBm/g, '') <= -80 && rv.rscp.replace(/ \(RSRP\) dBm/g, '') > -90)  { document.getElementById('rscp').innerHTML=rv.rscp + '	<img src="<%=resource%>/icons/signal-25-50.png">'; }
+				else if ( rv.rscp.replace(/ \(RSRP\) dBm/g, '') <= -90 && rv.rscp.replace(/ \(RSRP\) dBm/g, '') > -100)  { document.getElementById('rscp').innerHTML=rv.rscp + '	<img src="<%=resource%>/icons/signal-0-25.png">'; }
+				else { document.getElementById('rscp').innerHTML=rv.rscp + '	<img src="<%=resource%>/icons/signal-0.png">'; }
 			document.getElementById('ecio1').innerHTML=rv.ecio1;
 			document.getElementById('rscp1').innerHTML=rv.rscp1;
 			document.getElementById('conntype').innerHTML=rv.conntype;
 			document.getElementById('chan').innerHTML=rv.channel;
 			document.getElementById('lband').innerHTML=rv.lband;
 			document.getElementById('temp').innerHTML=rv.temp;
-			document.getElementById('sinr').innerHTML=rv.sinr;
+				if ( rv.sinr.replace(/ dB/g, '') > 25) { document.getElementById('sinr').innerHTML=rv.sinr + '	<img src="<%=resource%>/icons/signal-75-100.png">'; }
+				else if ( rv.sinr.replace(/ dB/g, '') <= 25 && rv.sinr.replace(/ dB/g, '') > 20)  { document.getElementById('sinr').innerHTML=rv.sinr + '	<img src="<%=resource%>/icons/signal-50-75.png">'; }
+				else if ( rv.sinr.replace(/ dB/g, '') <= 20 && rv.sinr.replace(/ dB/g, '') > 15)  { document.getElementById('sinr').innerHTML=rv.sinr + '	<img src="<%=resource%>/icons/signal-25-50.png">'; }
+				else if ( rv.sinr.replace(/ dB/g, '') <= 15 && rv.sinr.replace(/ dB/g, '') > 10)  { document.getElementById('sinr').innerHTML=rv.sinr + '	<img src="<%=resource%>/icons/signal-0-25.png">'; }
+				else { document.getElementById('sinr').innerHTML=rv.sinr + '	<img src="<%=resource%>/icons/signal-0.png">'; }
 			document.getElementById('conmon').innerHTML=rv.netmode;
 
 			document.getElementById('crate').innerHTML=rv.crate;
@@ -359,10 +376,7 @@
   	</tr>
   	<tr>
     		<td><div align="right">Signal Strength : </div></td>
-    		<td><ul id="per"></ul>
-  		<script type="text/javascript">//<![CDATA[
-				document.body.innerHTML = "<img src="<%=resource%>/icons/signal-75-100.png">";
- 		//]]></script></td>
+    		<td><ul id="per"></ul></td>
     		<td>&nbsp;</td>
   	</tr>
   	<tr>
@@ -466,3 +480,5 @@
 </div>
 </form>
 <%+footer%>
+
+	

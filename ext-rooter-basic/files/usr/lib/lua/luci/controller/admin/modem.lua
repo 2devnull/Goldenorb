@@ -375,3 +375,4 @@ function action_externalip()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(rv)
 end
+

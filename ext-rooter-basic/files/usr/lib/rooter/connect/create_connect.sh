@@ -67,11 +67,14 @@ check_apn() {
 	then
 		IPVAR="IPV4V6"
 	fi
-	ATCMDD="AT+CGDCONT?"
+	ATCMDD="AT+CGDCONT?;+CFUN?"
 	OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
 	if `echo ${OX} | grep "+CGDCONT: 1,\"$IPVAR\",\"$NAPN\"," 1>/dev/null 2>&1`
 	then
-		:
+		if `echo ${OX} | grep "+CFUN: 0" 1>/dev/null 2>&1`
+		then
+			$ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "AT+CFUN=1"
+		fi
 	else
 		ATCMDD="AT+CGDCONT=1,\"$IPVAR\",\"$NAPN\";+CFUN=0;+CFUN=1"
 		OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
@@ -96,7 +99,7 @@ chcklog() {
 	fi
 }
 
-local NAPN NUSER NPASS NAUTH PINCODE
+# local NAPN NUSER NPASS NAUTH PINCODE
 
 get_connect() {
 	NAPN=$(uci get modem.modeminfo$CURRMODEM.apn)

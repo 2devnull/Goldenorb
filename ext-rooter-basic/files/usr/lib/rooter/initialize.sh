@@ -45,12 +45,12 @@ do_zone() {
 firstboot() {
 	HO=$(uci get system.@system[-1].hostname)
 	if [ $HO = "OpenWrt" ]; then
-		uci set system.@system[-1].hostname="ROOter"
-		echo "ROOter" > /proc/sys/kernel/hostname
+		uci set system.@system[-1].hostname="LTE_ROUTER"
+		echo "LTE_ROUTER" > /proc/sys/kernel/hostname
 	fi
 	if [ $HO = "LEDE" ]; then
-		uci set system.@system[-1].hostname="ROOter"
-		echo "ROOter" > /proc/sys/kernel/hostname
+		uci set system.@system[-1].hostname="LTE_ROUTER"
+		echo "LTE_ROUTER" > /proc/sys/kernel/hostname
 	fi
 	uci set system.@system[-1].cronloglevel="9"
 	uci commit system
@@ -60,7 +60,7 @@ firstboot() {
 	config_load firewall
 	config_foreach do_zone zone
 
-	uci set luci.main.mediaurlbase="/luci-static/rooter"
+	uci set luci.main.mediaurlbase="/luci-static/darkmatter"
 	uci commit luci
 }
 
@@ -285,6 +285,7 @@ echo "413c 81b6" > /sys/bus/usb-serial/drivers/option1/new_id
 echo "1e0e 9001" > /sys/bus/usb/drivers/qmi_wwan/new_id
 echo "1546 1146" > /sys/bus/usb-serial/drivers/option1/new_id
 echo "106c 3718" > /sys/bus/usb-serial/drivers/option1/new_id
+echo "1199 9091 0 1199 9079" > /sys/bus/usb-serial/drivers/qcserial/new_id
 
 # end of booup
 echo "0" > /tmp/bootend.file

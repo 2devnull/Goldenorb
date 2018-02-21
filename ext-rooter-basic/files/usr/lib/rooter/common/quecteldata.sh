@@ -3,24 +3,38 @@
 ROOTER=/usr/lib/rooter
 
 log() {
-	logger -t "ublox Data" "$@"
+	logger -t "Quectel Data" "$@"
 }
 
 CURRMODEM=$1
 COMMPORT=$2
 
-get_ublox() {
-	OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "ubloxinfo.gcom" "$CURRMODEM" | tr 'a-z' 'A-Z')
+decode_bw() {
+	BW=$(echo $BW | grep -o "[0-5]\{1\}")
+	case $BW in
+		"0")
+			BW="1.4"
+			;;
+		"1")
+			BW="3"
+			;;
+		"2")
+			BW="5"
+			;;
+		"3")
+			BW="10"
+			;;
+		"4")
+			BW="15"
+			;;
+		"5")
+			BW="20"
+			;;
+	esac
 }
 
-get_ublox
+OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "quectelinfo.gcom" "$CURRMODEM" | tr 'a-z' 'A-Z')
 
-UCGED=$(echo $OX | grep -o "+UCGED: 2")
-if [ -z "$UCGED" ]; then
-	ATCMDD="AT+UCGED=2"
-	UCGED=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
-	get_ublox
-fi
 OX=$OX
 
 RSRP=""
@@ -35,7 +49,10 @@ MODTYPE="-"
 NETMODE="-"
 LBAND="-"
 
-CSQ=$(echo $OX | grep -o "+CSQ: .\+ +CESQ" | tr " " ",")
+CSQ=$(echo $OX | grep -o "+CSQ: .\+ +QENG" | tr " " ",")
+QENG=$(echo $OX" " | grep -o "+QENG: .\+ OK " | tr " " ",")
+
+
 CESQ=$(echo $OX | grep -o "+CESQ: .\+ +URAT" | tr " " ",")
 URAT=$(echo $OX | grep -o "+URAT: .\+ +UCGED" | tr " " ",")
 UCGED=$(echo $OX" " | grep -o "+UCGED: .\+ OK " | tr " " ",")
@@ -43,10 +60,10 @@ UCGED=$(echo $OX" " | grep -o "+UCGED: .\+ OK " | tr " " ",")
 CSQ=$(echo $CSQ | cut -d, -f2)
 CSQ=$(echo $CSQ | grep -o "[0-9]\{1,2\}")
 
-if [ "$CSQ" -eq "99" ]; then
+if [ $CSQ -eq "99" ]; then
 	CSQ=""
 fi
-if [ -n "$CSQ" ]; then
+if [ -n $CSQ ]; then
 	CSQ_PER=$(($CSQ * 100/31))"%"
 	CSQ_RSSI=$((2 * CSQ - 113))" dBm"
 else
@@ -55,49 +72,38 @@ else
 	CSQ_RSSI="-"
 fi
 
-RAT=$(echo $UCGED | cut -d, -f3)
-case "$RAT" in
-	"2")
+RAT=$(echo $QENG | cut -d, -f4 | grep -o "[A-Z]\{3,5\}")
+
+case $RAT in
+	"GSM")
 		MODE="GSM"
-		LAC=$(echo $UCGED | cut -d, -f11)
+		LAC=$(echo $QENG | cut -d, -f7)
 		LAC=$(echo $LAC | grep -o "[0-9A-F]\{4\}")
-		CID=$(echo $UCGED | cut -d, -f9)
+		CID=$(echo $QENG | cut -d, -f8)
 		CID=$(echo $CID | grep -o "[0-9A-F]\{4\}")
 		;;
-	"3")
+	"WCDMA")
 		MODE="UMTS"
-		CHANNEL=$(echo $UCGED | cut -d, -f7)
-		LAC=$(echo $UCGED | cut -d, -f10)
+		CHANNEL=$(echo $QENG | cut -d, -f9)
+		LAC=$(echo $QENG | cut -d, -f7)
 		LAC=$(echo $LAC | grep -o "[0-9A-F]\{4\}")
-		CID=$(echo $UCGED | cut -d, -f9)
-		CID=$(echo $CID | grep -o "[0-9A-F]\{7,8\}")
-		RSCP=$(echo $CESQ | cut -d, -f4)
-		RSCP=$(echo $RSCP | grep -o "[0-9]\{1,3\}")
-		if [ "$RSCP" -eq "255" ]; then
-			RSCP=""
-		fi
-		if [ -n "$RSCP" ]; then
-			RSCP=$(($RSCP - 121))
-		fi
-		ECIO=$(echo $CESQ | cut -d, -f5)
-		ECIO=$(echo $ECIO | grep -o "[0-9]\{1,3\}")
-		if [ "$ECIO" -eq "255" ]; then
-			ECIO=""
-		fi
-		if [ -n "$ECIO" ]; then
-			ECIO=$((($ECIO / 2) - 24))
-		fi
+		CID=$(echo $QENG | cut -d, -f8)
+		CID=$(echo $CID | grep -o "[0-9A-F]\{5,8\}")
+		RSCP=$(echo $QENG | cut -d, -f12)
+		RSCP="-"$(echo $RSCP | grep -o "[0-9]\{1,3\}")
+		ECIO=$(echo $QENG | cut -d, -f13)
+		ECIO="-"$(echo $ECIO | grep -o "[0-9]\{1,3\}")
 		;;
-	"4")
+	"LTE")
 		MODE="LTE"
-		LBAND=$(echo $UCGED | cut -d, -f8)
-		if [ "$LBAND" -eq "255" ]; then
-			LBAND=""
-		fi
-		BWU=$(echo $UCGED | cut -d, -f9)
-		BWU=$(echo $BWU | grep -o "[0-9]\{1,3\}")
-		BWD=$(echo $UCGED | cut -d, -f10)
-		BWD=$(echo $BWD | grep -o "[0-9]\{1,3\}")
+		CHANNEL=$(echo $QENG | cut -d, -f10)
+		LBAND=$(echo $QENG | cut -d, -f11)
+		BW=$(echo $QENG | cut -d, -f12)
+		decode_bw
+		BWU=$BW
+		BW=$(echo $QENG | cut -d, -f13)
+		decode_bw
+		BWD=$BW
 		if [ -z "$BWD" ]; then
 			LBAND=""
 		fi
@@ -107,46 +113,35 @@ case "$RAT" in
 		if [ -z "$LBAND" ]; then
 			LBAND="-"
 		else
-			BWU=$(($(echo $BWU) / 5))
-			BWD=$(($(echo $BWD) / 5))
 			LBAND="B"$LBAND" (Bandwidth $BWD MHz Down | $BWU MHz Up)"
 		fi
-		LAC=$(echo $UCGED | cut -d, -f11)
+		LAC=$(echo $QENG | cut -d, -f14)
 		LAC=$(echo $LAC | grep -o "[0-9A-F]\{4\}")
-		CID=$(echo $UCGED | cut -d, -f12)
-		CID=$(echo $CID | grep -o "[0-9A-F]\{7,8\}")
-		RSRP=$(echo $CESQ | cut -d, -f7)
+		CID=$(echo $QENG | cut -d, -f8)
+		CID=$(echo $CID | grep -o "[0-9A-F]\{5,8\}")
+		RSRP=$(echo $QENG | cut -d, -f15)
 		RSRP=$(echo $RSRP | grep -o "[0-9]\{1,3\}")
-		if [ "$RSRP" -eq "255" ]; then
-			RSRP=""
-		fi
 		if [ -n "$RSRP" ]; then
-			RSRP=$(($RSRP - 141))
-			RSCP=$RSRP" (RSRP)"
+			RSCP="-"$RSRP" (RSRP)"
 		fi
-		RSRQ=$(echo $CESQ | cut -d, -f6)
+		RSRQ=$(echo $QENG | cut -d, -f16)
 		RSRQ=$(echo $RSRQ | grep -o "[0-9]\{1,3\}")
-		if [ "$RSRQ" -eq "255" ]; then
-			RSRQ=""
-		fi
-		if [ -n "$RSRQ" ]; then
-			RSRQ=$((($RSRQ / 2) - 19))
-			ECIO=$RSRQ" (RSRQ)"
+		if [ -n $RSRQ ]; then
+			ECIO="-"$RSRQ" (RSRQ)"
 		fi
 		;;
 esac
 
-if [ $RAT -eq "2" ]; then
+if [ $RAT = "GSM" ]; then
 	if [ -n "$CID" ]; then
 		CID_NUM=$(printf "%d" 0x$CID)
 		CID=$CID" ("$CID_NUM")"
 	fi
 else
-	CID=$(echo $CID | grep -o "[0-9A-F]\{5,8\}")
-	if [ -n "$CID" ]; then
+	if [ -n $CID ]; then
 		LCID=$(printf "%08X" 0x$CID)
 		LCID_NUM=$(printf "%d" 0x$LCID)
-		if [ "$RAT" -eq "4" ]; then
+		if [ $RAT = "LTE" ]; then
 			RNC=$(printf "${LCID:1:5}")
 			CID=$(printf "${LCID:6:2}")
 		else
@@ -159,42 +154,12 @@ else
 	fi
 fi
 
-if [ -n "$LAC" ]; then
+if [ -n $LAC ]; then
 	LAC_NUM=$(printf "%d" 0x$LAC)
 	LAC=$LAC" ("$LAC_NUM")"
 else
 	LAC="-"
 	LAC_NUM="-"
-fi
-
-URAT1=$(echo $URAT | cut -d, -f2)
-URAT2=$(echo $URAT | cut -d, -f3)
-if [ -n "$URAT1" ]; then
-	MODTYPE="5"
-	case $URAT1 in
-	"0" )
-		NETMODE="3"
-		;;
-	"2" )
-		NETMODE="5"
-		;;
-	"3" )
-		NETMODE="7"
-		;;
-	* )
-		case $URAT2 in
-		"0" )
-			NETMODE="2"
-			;;
-		"2" )
-			NETMODE="4"
-			;;
-		"3" )
-			NETMODE="1"
-			;;
-		esac
-		;;
-	esac
 fi
 
 echo 'CSQ="'"$CSQ"'"' > /tmp/signal$CURRMODEM.file

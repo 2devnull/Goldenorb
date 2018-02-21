@@ -14,4 +14,3 @@ M3=$(echo "$M2" | sed -e "s!RSRP (dBm):!RSRP4: !;s!RSRQ (dB):!RSRQ4: !;s!LTERSRP
 M7=$(echo "$M3" | sed -e "s!RX level Carrier 0 (dBm):!RSSI3: !;s!RX level Carrier 1 (dBm):!RSSI13: !;s!SYSCFG:!SYSCFG: !;s!  ! !g")
 OX=$(echo "$M7" | sed -e "s!WCDMA channel:!UMTS:!;s!SYSINFO:!SYSINFO: !")
 echo "$OX"
-

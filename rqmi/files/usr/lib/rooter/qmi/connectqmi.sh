@@ -58,6 +58,13 @@ uqmi -s -d "$device" --set-data-format 802.3
 uqmi -s -d "$device" --wda-set-data-format 802.3
 DATAFORM=$(uqmi -s -d "$device" --wda-get-data-format)
 log "WDA-GET-DATA-FORMAT is $DATAFORM"
+if [ "$DATAFORM" = '"raw-ip"' ]; then
+	[ -f /sys/class/net/$ifname/qmi/raw_ip ] || {
+		log "Device only supports raw-ip mode but is missing this required driver attribute: /sys/class/net/$ifname/qmi/raw_ip"
+		exit 1
+	}
+	echo "Y" > /sys/class/net/$ifname/qmi/raw_ip
+fi
 
 log "Waiting for network registration"
 while uqmi -s -d "$device" --get-serving-system | grep '"searching"' > /dev/null; do

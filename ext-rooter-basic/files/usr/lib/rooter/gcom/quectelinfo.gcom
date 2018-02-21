@@ -1,36 +1,28 @@
 opengt
  set com 115200n81
  set comecho off
- set senddelay 0.05
- waitquiet 1 0.2
+ set senddelay 0.02
+ waitquiet 0.2 0.2
 
-:start
 let $g=$env("TIMEOUT")
 if $g = "" let f=25
 else let f = val($g)
 
-send "AT+CGPADDR=1^m"
+send "AT+CSQ^m"
 let t=time()+f
 gosub getresult
 if $s="^mTIMEOUT ERROR" print $s
 
-send "AT\^SYSINFOEX^m"
+send "AT+QENG=\"servingcell\"^m"
 let t=time()+f
 gosub getresult
 if $s="^mTIMEOUT ERROR" print $s
 
-send "AT\^SYSINFO^m"
-let t=time()+f
-gosub getresult
-if $s="^mTIMEOUT ERROR" print $s
+# send "AT+QTRYRAT?^m"
+# let t=time()+f
+# gosub getresult
+# if $s="^mTIMEOUT ERROR" print $s
 
-send "AT\^NDISSTATQRY?^m"
-let t=time()+f
-gosub getresult
-if $s="^mTIMEOUT ERROR" print $s
-
-
-:continue
  exit 0
 
 :getresult

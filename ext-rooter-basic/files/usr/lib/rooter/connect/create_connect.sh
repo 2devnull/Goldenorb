@@ -58,6 +58,27 @@ set_dns() {
 	fi
 }
 
+check_apn() {
+	local IPVAR="IP"
+	local COMMPORT="/dev/ttyUSB"$CPORT
+	ATCMDD="AT+CGDCONT=?"
+	OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
+	if `echo ${OX} | grep "IPV4V6" 1>/dev/null 2>&1`
+	then
+		IPVAR="IPV4V6"
+	fi
+	ATCMDD="AT+CGDCONT?"
+	OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
+	if `echo ${OX} | grep "+CGDCONT: 1,\"$IPVAR\",\"$NAPN\"," 1>/dev/null 2>&1`
+	then
+		:
+	else
+		ATCMDD="AT+CGDCONT=1,\"$IPVAR\",\"$NAPN\";+CFUN=0;+CFUN=1"
+		OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
+		sleep 5
+	fi
+}
+
 save_variables() {
 	echo 'MODSTART="'"$MODSTART"'"' > /tmp/variable.file
 	echo 'WWAN="'"$WWAN"'"' >> /tmp/variable.file
@@ -217,19 +238,14 @@ else
 		idV=$(uci get modem.modem$CURRMODEM.idV)
 		idP=$(uci get modem.modem$CURRMODEM.idP)
 		SIERRAID=0
-		if [ $idV = 1199 -a $idP = 9071 ]; then
-			SIERRAID=1
+		if [ $idV = 1199 ]; then
+			case $idP in
+				"9071"|"9079"|"9041"|"9051"|"68c0"|"9091" )
+					SIERRAID=1
+				;;
+			esac
 		fi
 		if [ $idV = 413c -a $idP = 81b6 ]; then
-			SIERRAID=1
-		fi
-		if [ $idV = 1199 -a $idP = 9079 ]; then
-			SIERRAID=1
-		fi
-		if [ $idV = 1199 -a $idP = 9041 ]; then
-			SIERRAID=1
-		fi
-		if [ $idV = 1199 -a $idP = 9051 ]; then
 			SIERRAID=1
 		fi
 		if [ $SIERRAID -eq 1 ]; then
@@ -250,6 +266,7 @@ else
 		CPORT=`expr $CPORT + $BASEP`
 
 		log "QMI Comm Port : /dev/ttyUSB$CPORT"
+		check_apn
 		;;
 	"3"|"30" )
 		log "Start MBIM Connection"
@@ -327,7 +344,7 @@ while [ 1 -lt 6 ]; do
 				OX=$($ROOTER/gcom/gcom-locked "/dev/ttyUSB$CPORT" "curc.gcom" "$CURRMODEM")
 				log "Unsolicited Responses Disabled"
 				ATCMDD="AT^USSDMODE=0"
-				OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
+				OX=$($ROOTER/gcom/gcom-locked "/dev/ttyUSB$CPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
 			fi
 		;;
 	esac
@@ -438,6 +455,7 @@ esac
 		OX=$($ROOTER/gcom/gcom-locked "/dev/ttyUSB$CPORT" "run-at.gcom" "$CURRMODEM" "ati")
 		E5372=$(echo ${OX} | grep "E5372")
 		R215=$(echo ${OX} | grep "R215")
+		check_apn
 		if [ -n "$E5372" -o -n "$R215" ]; then
 			ifup wan$CURRMODEM
 			BRK=0
@@ -504,17 +522,15 @@ esac
 		idP=$(uci get modem.modem$CURRMODEM.idP)
 
 		NETIFD=0
-		if [ $idV = 1199 -a $idP = 9071 ]; then
-			NETIFD=1
-		fi
 		if [ $idV = 413c -a $idP = 81b6 ]; then
 			NETIFD=1
 		fi
-		if [ $idV = 1199 -a $idP = 9079 ]; then
-			NETIFD=1
-		fi
-		if [ $idV = 1199 -a $idP = 9041 ]; then
-			NETIFD=1
+		if [ $idV = 1199 ]; then
+			case $idP in
+				"9071"|"9079"|"9041"|"9051"|"68c0"|"9091" )
+					NETIFD=1
+				;;
+			esac
 		fi
 		#if [ $idV = 12d1 -a $idP = 15c1 ]; then
 		#	NETIFD=2
@@ -539,17 +555,7 @@ esac
 			CPORT=`expr $CPORT + $BASEP`
 			uci set modem.modem$CURRMODEM.commport=$CPORT
 			if [ -n "$CPORT" ]; then
-				COMMPORT="/dev/ttyUSB"$CPORT
-				ATCMDD="AT+CGDCONT?"
-				OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
-				if `echo ${OX} | grep "+CGDCONT: 1,\"IPV4V6\",\"$NAPN\"," 1>/dev/null 2>&1`
-				then
-					:
-				else
-					ATCMDD="AT+CGDCONT=1,\"IPV4V6\",\"$NAPN\";+CFUN=0:+CFUN=1"
-					OX=$($ROOTER/gcom/gcom-locked "$COMMPORT" "run-at.gcom" "$CURRMODEM" "$ATCMDD")
-					sleep 10
-				fi
+				check_apn
 				uci set modem.modem$CURRMODEM.proto="30"
 			fi
 			uci commit modem

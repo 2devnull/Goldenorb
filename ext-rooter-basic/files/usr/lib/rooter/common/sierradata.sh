@@ -213,4 +213,3 @@ fi
 if echo $OPER | grep -q "down"; then
 	echo "1" > "/tmp/connstat"$CURRMODEM
 fi
-

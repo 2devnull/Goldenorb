@@ -111,4 +111,3 @@ if [ -z $T ]; then
 else
 	uqmi -s -d "$device" --stop-network 0xffffffff --autoconnect > /dev/null & sleep 10 ; kill -9 $!
 fi
-
